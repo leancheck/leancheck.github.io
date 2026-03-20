@@ -19,6 +19,13 @@
         <div>
 
 
+            <h2>Contents</h2>
+            <ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#example-testing-a-sorting-function">Example: testing a sorting function</a></li>
+  <li><a href="#example-custom-class">Example: custom class</a></li>
+</ul>
+
 
 
             <h2>API Documentation</h2>
@@ -113,7 +120,7 @@
     </ul>
 
 
-            <footer>leancheck 0.1.4</footer>
+            <footer>leancheck 0.1.6</footer>
 
         <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev" target="_blank">
             built with <span class="visually-hidden">pdoc</span><img
@@ -130,6 +137,8 @@ leancheck    </h1>
                         <div class="docstring"><p>LeanCheck is an enumerative property-based testing library.
 It can be used to complement your unit tests.</p>
 
+<h2 id="introduction">Introduction</h2>
+
 <p>The usual drill in unit testing involves making assertions
 about specific input-output cases of functions, such as:</p>
 
@@ -140,27 +149,32 @@ about specific input-output cases of functions, such as:</p>
 
 <p>In property-based testing (with LeanCheck)
 one writes more general properties that should be true
-for a given set of arguments.
+for any assignment of arguments.
 Properties in this sense are
 parameterized unit tests or
 parameterized assertions.</p>
 
 <p>For example:
-given <em>any</em> list, sorting it twice is the same as sorting it once.
+given <strong>any</strong> list, sorting it twice is the same as sorting it once.
 We can encode this as a function returning a boolean value:</p>
 
-<pre><code>&gt;&gt;&gt; def prop_sorted_twice(xs: list[int]) -&gt; bool:
-...     return sorted(sorted(xs)) == sorted(xs)
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">prop_sorted_twice</span><span class="p">(</span><span class="n">xs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">xs</span><span class="p">))</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
 </code></pre>
+</div>
 
 <p>For whatever list we provide this function,
 it should return <code>True</code>.
 Now one can use LeanCheck to verify this automatically:</p>
 
-<pre><code>&gt;&gt;&gt; check(prop_sorted_twice)
-+++ OK, passed 360 tests: prop_sorted_twice
-True
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">leancheck</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check</span><span class="p">(</span><span class="n">prop_sorted_twice</span><span class="p">)</span>
+<span class="go">+++ OK, passed 360 tests: prop_sorted_twice</span>
+<span class="go">True</span>
 </code></pre>
+</div>
 
 <p>LeanCheck automatically came up with 360 unique lists
 to exercise the property.</p>
@@ -168,15 +182,20 @@ to exercise the property.</p>
 <p>When the property or function-under-test is incorrect
 LeanCheck may find and report a counterexample:</p>
 
-<pre><code>&gt;&gt;&gt; def prop_sorted_wrong(xs: list[int]) -&gt; bool:
-...     return sorted(xs) == xs
-...
-
-&gt;&gt;&gt; check(prop_sorted_wrong)
-*** Failed! Falsifiable after 7 tests:
-    prop_sorted_wrong([1, 0])
-False
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">prop_sorted_wrong</span><span class="p">(</span><span class="n">xs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="o">==</span> <span class="n">xs</span>
+<span class="gp">...</span>
 </code></pre>
+</div>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">check</span><span class="p">(</span><span class="n">prop_sorted_wrong</span><span class="p">)</span>
+<span class="go">*** Failed! Falsifiable after 7 tests:</span>
+<span class="go">    prop_sorted_wrong([1, 0])</span>
+<span class="go">False</span>
+</code></pre>
+</div>
 
 <p>We now know that an ill input is the list <code>[1, 0]</code>.
 In this arbitrary example, the property is incorrect.
@@ -198,108 +217,425 @@ an if-expression as you would do with <code>unittest.main()</code> or <code>doct
 </code></pre>
 
 <p>This is a port of <a href="https://hackage.haskell.org/package/leancheck">Haskell's LeanCheck</a> to <a href="https://python.org">Python</a>.</p>
+
+<h2 id="example-testing-a-sorting-function">Example: testing a sorting function</h2>
+
+<p>Consider the following (not-quite) <code>qsort</code> function:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">qsort</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">lst</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">etc</span> <span class="o">=</span> <span class="n">lst</span>  <span class="c1"># split into head and tail</span>
+    <span class="n">lesser</span>  <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">etc</span> <span class="k">if</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">x</span><span class="p">]</span>
+    <span class="n">greater</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">etc</span> <span class="k">if</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">x</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">qsort</span><span class="p">(</span><span class="n">lesser</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">+</span> <span class="n">qsort</span><span class="p">(</span><span class="n">greater</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>It returns the sorted version of the given argument list:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;</span> <span class="n">qsort</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<p>We can define the following three properties about it:</p>
+
+<ol>
+<li>Sorting a list returns the elements in order;</li>
+<li>Sorting preserves membership in the list;</li>
+<li>Sorting does not change the list length.</li>
+</ol>
+
+<p>We can define and test these properties with LeanCheck as follows:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">leancheck</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">prop_sort_ordered</span><span class="p">(</span><span class="n">xs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="n">qsort</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="n">ys</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">prop_sort_elem</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">xs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="n">qsort</span><span class="p">(</span><span class="n">xs</span><span class="p">))</span> <span class="o">==</span> <span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">prop_sort_len</span><span class="p">(</span><span class="n">xs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">qsort</span><span class="p">(</span><span class="n">xs</span><span class="p">))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n"><a href="#main">leancheck.main</a></span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>We import LeanCheck, define the properties and call <code><a href="#main">leancheck.main()</a></code>
+which will test all properties defined in the file:
+anything named <code>prop_*</code>.
+The properties may be placed together with the function(s) under test
+or in a separate test file depending on your needs.</p>
+
+<p>Note the type annotations, these are necessary for LeanCheck to know
+how to test each property.</p>
+
+<p>Running the above file/program/script yields the following report:</p>
+
+<pre><code>+++ OK, passed 360 tests: prop_sort_ordered
+
++++ OK, passed 360 tests: prop_sort_elem
+
+*** Failed! Falsifiable after 3 tests:
+    prop_sort_len([0, 0])
+</code></pre>
+
+<p>We actually have a failure in the third property
+and we can investigate:</p>
+
+<pre><code>&gt; <a href="#check">leancheck.check</a>(prop_sort_len)
+*** Failed! Falsifiable after 3 tests:
+    prop_sort_len([0, 0])
+
+&gt; prop_sort_len([0, 0])
+False
+
+&gt; len(qsort([0, 0]))
+1
+
+&gt; qsort([0, 0])
+[0]
+</code></pre>
+
+<p>Our function discards repeated elements!
+Fixing the bug in <code>qsort</code> is left as an exercise to the reader.</p>
+
+<p>An extended version of this example can be found
+under the <code>examples/</code> folder in the source repository.</p>
+
+<h2 id="example-custom-class">Example: custom class</h2>
+
+<p>LeanCheck also works for tesing properties
+over instances of custom or user-defined classes.
+The following short example illustrates how to do this:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">leancheck</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">leancheck</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enumerator</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Point</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Point(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">prop_distance_positive</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">Point</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="n">Point</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">prop_self_distance</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">Point</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n"><a href="#main">leancheck.main</a></span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Then just run:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code>$<span class="w"> </span>python<span class="w"> </span>point.py
++++<span class="w"> </span>OK,<span class="w"> </span>passed<span class="w"> </span><span class="m">360</span><span class="w"> </span>tests:<span class="w"> </span>prop_distance_positive
++++<span class="w"> </span>OK,<span class="w"> </span>passed<span class="w"> </span><span class="m">360</span><span class="w"> </span>tests:<span class="w"> </span>prop_self_distance
++++<span class="w"> </span><span class="m">2</span><span class="w"> </span>properties<span class="w"> </span>passed
+</code></pre>
+</div>
+
+<p>The enumeration for <code>Point</code>s is inferred
+from the type annotations in the constructor.
+A point is a cross-product of two floats:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="o">&gt;</span> <span class="nb">print</span><span class="p">(</span><span class="n">Enumerator</span><span class="p">(</span><span class="n">Point</span><span class="p">))</span>
+<span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="o">...</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<p>If the type-annotation was not present,
+an enumerator could be registered for use with:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="n"><a href="#Enumerator.register_cons">Enumerator.register_cons</a></span><span class="p">(</span><span class="n">Point</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>... anywhere between the <code>Point</code> class declaration
+and the <code><a href="#main">leancheck.main</a></code> call.</p>
 </div>
 
                         <input id="mod-leancheck-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 
                         <label class="view-source-button" for="mod-leancheck-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="ch">#!/usr/bin/env python</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="c1">#</span>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="c1"># LeanCheck for Python.  Init module.</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="c1">#</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="c1"># (C) 2023-2024  Rudy Matela</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="c1"># Distributed under the LGPL v2.1 or later (see the file LICENSE)</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="sd">LeanCheck is an enumerative property-based testing library.</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="sd">It can be used to complement your unit tests.</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="sd">The usual drill in unit testing involves making assertions</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="sd">about specific input-output cases of functions, such as:</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">    assertEqual(sorted([4,2,1,3]), [1,2,3,4])</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd">There are no arguments to the unit test.</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="sd">In property-based testing (with LeanCheck)</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="sd">one writes more general properties that should be true</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">for a given set of arguments.</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">Properties in this sense are</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="sd">parameterized unit tests or</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a><span class="sd">parameterized assertions.</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="sd">For example:</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="sd">given *any* list, sorting it twice is the same as sorting it once.</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="sd">We can encode this as a function returning a boolean value:</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="sd">    &gt;&gt;&gt; def prop_sorted_twice(xs: list[int]) -&gt; bool:</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a><span class="sd">    ...     return sorted(sorted(xs)) == sorted(xs)</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="sd">For whatever list we provide this function,</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">it should return `True`.</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">Now one can use LeanCheck to verify this automatically:</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">    &gt;&gt;&gt; check(prop_sorted_twice)</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">    +++ OK, passed 360 tests: prop_sorted_twice</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">    True</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="sd">LeanCheck automatically came up with 360 unique lists</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="sd">to exercise the property.</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a><span class="sd">When the property or function-under-test is incorrect</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="sd">LeanCheck may find and report a counterexample:</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="sd">    &gt;&gt;&gt; def prop_sorted_wrong(xs: list[int]) -&gt; bool:</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="sd">    ...     return sorted(xs) == xs</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">    ...</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">    &gt;&gt;&gt; check(prop_sorted_wrong)</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">    *** Failed! Falsifiable after 7 tests:</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="sd">        prop_sorted_wrong([1, 0])</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">    False</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="sd">We now know that an ill input is the list `[1, 0]`.</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="sd">In this arbitrary example, the property is incorrect.</span>
-</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a><span class="sd">In cases where the property is indeed correct,</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="sd">the counterexample indicates a bug.</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a>
-</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="sd">If you have a collection of properties (`prop_*`) in a Python file,</span>
-</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="sd">just call `leancheck.main()` and all of them will be automatically tested.</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a><span class="sd">In the case of a library, you can put everything under</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a><span class="sd">an if-expression as you would do with `unittest.main()` or `doctest.testmod()`.</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a>
-</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="sd">    if __name__ == &#39;__main__&#39;:</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a><span class="sd">        leancheck.main()</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a>
-</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a><span class="sd">[LeanCheck is available on PyPI][python-leancheck] and installable via:</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a>
-</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a><span class="sd">    $ pip install leancheck</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos">71</span></a>
-</span><span id="L-72"><a href="#L-72"><span class="linenos">72</span></a><span class="sd">This is a port of [Haskell&#39;s LeanCheck][] to [Python][].</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos">73</span></a>
-</span><span id="L-74"><a href="#L-74"><span class="linenos">74</span></a><span class="sd">[python-leancheck]: https://pypi.org/project/leancheck/</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos">75</span></a><span class="sd">[Haskell&#39;s LeanCheck]: https://hackage.haskell.org/package/leancheck</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos">76</span></a><span class="sd">[Python]: https://python.org</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos">77</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos">78</span></a>
-</span><span id="L-79"><a href="#L-79"><span class="linenos">79</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">leancheck.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos">80</span></a>    <span class="n">check</span><span class="p">,</span>
-</span><span id="L-81"><a href="#L-81"><span class="linenos">81</span></a>    <span class="n">holds</span><span class="p">,</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos">82</span></a>    <span class="n">main</span><span class="p">,</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos">83</span></a>    <span class="n">testmod</span><span class="p">,</span>
-</span><span id="L-84"><a href="#L-84"><span class="linenos">84</span></a>    <span class="n">precondition</span><span class="p">,</span>
-</span><span id="L-85"><a href="#L-85"><span class="linenos">85</span></a>    <span class="n">Enumerator</span><span class="p">,</span>
-</span><span id="L-86"><a href="#L-86"><span class="linenos">86</span></a><span class="p">)</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos">87</span></a>
-</span><span id="L-88"><a href="#L-88"><span class="linenos">88</span></a><span class="c1"># For pdoc</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos">89</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="L-90"><a href="#L-90"><span class="linenos">90</span></a>    <span class="s2">&quot;check&quot;</span><span class="p">,</span>
-</span><span id="L-91"><a href="#L-91"><span class="linenos">91</span></a>    <span class="s2">&quot;holds&quot;</span><span class="p">,</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos">92</span></a>    <span class="s2">&quot;main&quot;</span><span class="p">,</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos">93</span></a>    <span class="s2">&quot;testmod&quot;</span><span class="p">,</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos">94</span></a>    <span class="s2">&quot;precondition&quot;</span><span class="p">,</span>
-</span><span id="L-95"><a href="#L-95"><span class="linenos">95</span></a>    <span class="s2">&quot;Enumerator&quot;</span><span class="p">,</span>
-</span><span id="L-96"><a href="#L-96"><span class="linenos">96</span></a><span class="p">]</span>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">  1</span></a><span class="ch">#!/usr/bin/env python</span>
+</span><span id="L-2"><a href="#L-2"><span class="linenos">  2</span></a><span class="c1">#</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos">  3</span></a><span class="c1"># LeanCheck for Python.  Init module.</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">  4</span></a><span class="c1">#</span>
+</span><span id="L-5"><a href="#L-5"><span class="linenos">  5</span></a><span class="c1"># (C) 2023-2026  Rudy Matela</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="c1"># Distributed under the LGPL v2.1 or later (see the file LICENSE)</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="sd">LeanCheck is an enumerative property-based testing library.</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="sd">It can be used to complement your unit tests.</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a>
+</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="sd">## Introduction</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="sd">The usual drill in unit testing involves making assertions</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a><span class="sd">about specific input-output cases of functions, such as:</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="sd">    assertEqual(sorted([4,2,1,3]), [1,2,3,4])</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="sd">There are no arguments to the unit test.</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a><span class="sd">In property-based testing (with LeanCheck)</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a><span class="sd">one writes more general properties that should be true</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a><span class="sd">for any assignment of arguments.</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a><span class="sd">Properties in this sense are</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a><span class="sd">parameterized unit tests or</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a><span class="sd">parameterized assertions.</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a><span class="sd">For example:</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a><span class="sd">given **any** list, sorting it twice is the same as sorting it once.</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="sd">We can encode this as a function returning a boolean value:</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a>
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a><span class="sd">&gt;&gt;&gt; def prop_sorted_twice(xs: list[int]) -&gt; bool:</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a><span class="sd">...     return sorted(sorted(xs)) == sorted(xs)</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="sd">For whatever list we provide this function,</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a><span class="sd">it should return `True`.</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">Now one can use LeanCheck to verify this automatically:</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="sd">&gt;&gt;&gt; from leancheck import *</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a><span class="sd">&gt;&gt;&gt; check(prop_sorted_twice)</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a><span class="sd">+++ OK, passed 360 tests: prop_sorted_twice</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a><span class="sd">True</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="sd">LeanCheck automatically came up with 360 unique lists</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a><span class="sd">to exercise the property.</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">When the property or function-under-test is incorrect</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a><span class="sd">LeanCheck may find and report a counterexample:</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">&gt;&gt;&gt; def prop_sorted_wrong(xs: list[int]) -&gt; bool:</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">...     return sorted(xs) == xs</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a><span class="sd">...</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a><span class="sd">&gt;&gt;&gt; check(prop_sorted_wrong)</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="sd">*** Failed! Falsifiable after 7 tests:</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a><span class="sd">    prop_sorted_wrong([1, 0])</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">False</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a><span class="sd">We now know that an ill input is the list `[1, 0]`.</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a><span class="sd">In this arbitrary example, the property is incorrect.</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a><span class="sd">In cases where the property is indeed correct,</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a><span class="sd">the counterexample indicates a bug.</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a><span class="sd">If you have a collection of properties (`prop_*`) in a Python file,</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a><span class="sd">just call `leancheck.main()` and all of them will be automatically tested.</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a><span class="sd">In the case of a library, you can put everything under</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a><span class="sd">an if-expression as you would do with `unittest.main()` or `doctest.testmod()`.</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a><span class="sd">    if __name__ == &#39;__main__&#39;:</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a><span class="sd">        leancheck.main()</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a><span class="sd">[LeanCheck is available on PyPI][python-leancheck] and installable via:</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a><span class="sd">    $ pip install leancheck</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a><span class="sd">This is a port of [Haskell&#39;s LeanCheck][] to [Python][].</span>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">[python-leancheck]: https://pypi.org/project/leancheck/</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">[Haskell&#39;s LeanCheck]: https://hackage.haskell.org/package/leancheck</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a><span class="sd">[Python]: https://python.org</span>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="sd">Example: testing a sorting function</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">-----------------------------------</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a><span class="sd">Consider the following (not-quite) `qsort` function:</span>
+</span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a><span class="sd">```py</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a><span class="sd">def qsort(lst):</span>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a><span class="sd">    if lst == []:</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a><span class="sd">        return []</span>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a><span class="sd">    x, *etc = lst  # split into head and tail</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a><span class="sd">    lesser  = [y for y in etc if y &lt; x]</span>
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a><span class="sd">    greater = [y for y in etc if y &gt; x]</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a><span class="sd">    return qsort(lesser) + [x] + qsort(greater)</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="sd">```</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a><span class="sd">It returns the sorted version of the given argument list:</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a><span class="sd">```py</span>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a><span class="sd">&gt; qsort([4,2,1,3])</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="sd">[1,2,3,4]</span>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="sd">```</span>
+</span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>
+</span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a><span class="sd">We can define the following three properties about it:</span>
+</span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a><span class="sd">1. Sorting a list returns the elements in order;</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a><span class="sd">2. Sorting preserves membership in the list;</span>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a><span class="sd">3. Sorting does not change the list length.</span>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a><span class="sd">We can define and test these properties with LeanCheck as follows:</span>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a><span class="sd">```py</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="sd">import leancheck</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a><span class="sd">def prop_sort_ordered(xs: list[int]) -&gt; bool:</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a><span class="sd">    ys = qsort(xs)</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a><span class="sd">    return all(x &lt;= y for x, y in zip(ys, ys[1:]))</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a><span class="sd">def prop_sort_elem(x: int, xs: list[int]) -&gt; bool:</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a><span class="sd">    return (x in qsort(xs)) == (x in xs)</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a><span class="sd">def prop_sort_len(xs: list[int]) -&gt; bool:</span>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a><span class="sd">    return len(qsort(xs)) == len(xs)</span>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="sd">if __name__ == &#39;__main__&#39;:</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="sd">    leancheck.main(verbose=True)</span>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="sd">```</span>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a><span class="sd">We import LeanCheck, define the properties and call `leancheck.main()`</span>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a><span class="sd">which will test all properties defined in the file:</span>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a><span class="sd">anything named `prop_*`.</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a><span class="sd">The properties may be placed together with the function(s) under test</span>
+</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a><span class="sd">or in a separate test file depending on your needs.</span>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a><span class="sd">Note the type annotations, these are necessary for LeanCheck to know</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a><span class="sd">how to test each property.</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a><span class="sd">Running the above file/program/script yields the following report:</span>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a><span class="sd">    +++ OK, passed 360 tests: prop_sort_ordered</span>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>
+</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a><span class="sd">    +++ OK, passed 360 tests: prop_sort_elem</span>
+</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>
+</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a><span class="sd">    *** Failed! Falsifiable after 3 tests:</span>
+</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a><span class="sd">        prop_sort_len([0, 0])</span>
+</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a>
+</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a><span class="sd">We actually have a failure in the third property</span>
+</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a><span class="sd">and we can investigate:</span>
+</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a>
+</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a><span class="sd">    &gt; leancheck.check(prop_sort_len)</span>
+</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a><span class="sd">    *** Failed! Falsifiable after 3 tests:</span>
+</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a><span class="sd">        prop_sort_len([0, 0])</span>
+</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a>
+</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a><span class="sd">    &gt; prop_sort_len([0, 0])</span>
+</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a><span class="sd">    False</span>
+</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a>
+</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a><span class="sd">    &gt; len(qsort([0, 0]))</span>
+</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a><span class="sd">    1</span>
+</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a><span class="sd">    &gt; qsort([0, 0])</span>
+</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a><span class="sd">    [0]</span>
+</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a>
+</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a><span class="sd">Our function discards repeated elements!</span>
+</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a><span class="sd">Fixing the bug in `qsort` is left as an exercise to the reader.</span>
+</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a>
+</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a><span class="sd">An extended version of this example can be found</span>
+</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a><span class="sd">under the `examples/` folder in the source repository.</span>
+</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a>
+</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>
+</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a><span class="sd">Example: custom class</span>
+</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a><span class="sd">---------------------</span>
+</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a>
+</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a><span class="sd">LeanCheck also works for tesing properties</span>
+</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a><span class="sd">over instances of custom or user-defined classes.</span>
+</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a><span class="sd">The following short example illustrates how to do this:</span>
+</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a>
+</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a><span class="sd">```py</span>
+</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a><span class="sd">import leancheck</span>
+</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a><span class="sd">from leancheck import Enumerator</span>
+</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>
+</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a><span class="sd">class Point:</span>
+</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a><span class="sd">    def __init__(self, x: float, y: float):</span>
+</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a><span class="sd">        self.x = x</span>
+</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a><span class="sd">        self.y = y</span>
+</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a>
+</span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a><span class="sd">    def __repr__(self):</span>
+</span><span id="L-186"><a href="#L-186"><span class="linenos">186</span></a><span class="sd">        return f&quot;Point({self.x}, {self.y})&quot;</span>
+</span><span id="L-187"><a href="#L-187"><span class="linenos">187</span></a>
+</span><span id="L-188"><a href="#L-188"><span class="linenos">188</span></a><span class="sd">    def distance(self, other):</span>
+</span><span id="L-189"><a href="#L-189"><span class="linenos">189</span></a><span class="sd">        return (self.x - other.x)**2 + (self.y - other.y)**2</span>
+</span><span id="L-190"><a href="#L-190"><span class="linenos">190</span></a>
+</span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a><span class="sd">def prop_distance_positive(p: Point, q: Point) -&gt; bool:</span>
+</span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a><span class="sd">    return Point.distance(p,q) &gt;= 0</span>
+</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a>
+</span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a><span class="sd">def prop_self_distance(p: Point) -&gt; bool:</span>
+</span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a><span class="sd">    return Point.distance(p,p) == 0</span>
+</span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a>
+</span><span id="L-197"><a href="#L-197"><span class="linenos">197</span></a><span class="sd">if __name__ == &#39;__main__&#39;:</span>
+</span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a><span class="sd">    leancheck.main(verbose=True)</span>
+</span><span id="L-199"><a href="#L-199"><span class="linenos">199</span></a><span class="sd">```</span>
+</span><span id="L-200"><a href="#L-200"><span class="linenos">200</span></a>
+</span><span id="L-201"><a href="#L-201"><span class="linenos">201</span></a><span class="sd">Then just run:</span>
+</span><span id="L-202"><a href="#L-202"><span class="linenos">202</span></a>
+</span><span id="L-203"><a href="#L-203"><span class="linenos">203</span></a><span class="sd">```sh</span>
+</span><span id="L-204"><a href="#L-204"><span class="linenos">204</span></a><span class="sd">$ python point.py</span>
+</span><span id="L-205"><a href="#L-205"><span class="linenos">205</span></a><span class="sd">+++ OK, passed 360 tests: prop_distance_positive</span>
+</span><span id="L-206"><a href="#L-206"><span class="linenos">206</span></a><span class="sd">+++ OK, passed 360 tests: prop_self_distance</span>
+</span><span id="L-207"><a href="#L-207"><span class="linenos">207</span></a><span class="sd">+++ 2 properties passed</span>
+</span><span id="L-208"><a href="#L-208"><span class="linenos">208</span></a><span class="sd">```</span>
+</span><span id="L-209"><a href="#L-209"><span class="linenos">209</span></a>
+</span><span id="L-210"><a href="#L-210"><span class="linenos">210</span></a><span class="sd">The enumeration for `Point`s is inferred</span>
+</span><span id="L-211"><a href="#L-211"><span class="linenos">211</span></a><span class="sd">from the type annotations in the constructor.</span>
+</span><span id="L-212"><a href="#L-212"><span class="linenos">212</span></a><span class="sd">A point is a cross-product of two floats:</span>
+</span><span id="L-213"><a href="#L-213"><span class="linenos">213</span></a>
+</span><span id="L-214"><a href="#L-214"><span class="linenos">214</span></a><span class="sd">```py</span>
+</span><span id="L-215"><a href="#L-215"><span class="linenos">215</span></a><span class="sd">&gt; print(Enumerator(Point))</span>
+</span><span id="L-216"><a href="#L-216"><span class="linenos">216</span></a><span class="sd">[Point(0.0, 0.0), Point(0.0, 1.0), Point(1.0, 0.0), Point(0.0, -1.0), Point(1.0, 1.0), Point(-1.0, 0.0), ...]</span>
+</span><span id="L-217"><a href="#L-217"><span class="linenos">217</span></a><span class="sd">```</span>
+</span><span id="L-218"><a href="#L-218"><span class="linenos">218</span></a>
+</span><span id="L-219"><a href="#L-219"><span class="linenos">219</span></a><span class="sd">If the type-annotation was not present,</span>
+</span><span id="L-220"><a href="#L-220"><span class="linenos">220</span></a><span class="sd">an enumerator could be registered for use with:</span>
+</span><span id="L-221"><a href="#L-221"><span class="linenos">221</span></a>
+</span><span id="L-222"><a href="#L-222"><span class="linenos">222</span></a><span class="sd">```py</span>
+</span><span id="L-223"><a href="#L-223"><span class="linenos">223</span></a><span class="sd">Enumerator.register_cons(Point, float, float)</span>
+</span><span id="L-224"><a href="#L-224"><span class="linenos">224</span></a><span class="sd">```</span>
+</span><span id="L-225"><a href="#L-225"><span class="linenos">225</span></a>
+</span><span id="L-226"><a href="#L-226"><span class="linenos">226</span></a><span class="sd">... anywhere between the `Point` class declaration</span>
+</span><span id="L-227"><a href="#L-227"><span class="linenos">227</span></a><span class="sd">and the `leancheck.main` call.</span>
+</span><span id="L-228"><a href="#L-228"><span class="linenos">228</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-229"><a href="#L-229"><span class="linenos">229</span></a>
+</span><span id="L-230"><a href="#L-230"><span class="linenos">230</span></a><span class="kn">from</span><span class="w"> </span><span class="nn">leancheck.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="L-231"><a href="#L-231"><span class="linenos">231</span></a>    <span class="n">check</span><span class="p">,</span>
+</span><span id="L-232"><a href="#L-232"><span class="linenos">232</span></a>    <span class="n">holds</span><span class="p">,</span>
+</span><span id="L-233"><a href="#L-233"><span class="linenos">233</span></a>    <span class="n">main</span><span class="p">,</span>
+</span><span id="L-234"><a href="#L-234"><span class="linenos">234</span></a>    <span class="n">testmod</span><span class="p">,</span>
+</span><span id="L-235"><a href="#L-235"><span class="linenos">235</span></a>    <span class="n">precondition</span><span class="p">,</span>
+</span><span id="L-236"><a href="#L-236"><span class="linenos">236</span></a>    <span class="n">Enumerator</span><span class="p">,</span>
+</span><span id="L-237"><a href="#L-237"><span class="linenos">237</span></a><span class="p">)</span>
+</span><span id="L-238"><a href="#L-238"><span class="linenos">238</span></a>
+</span><span id="L-239"><a href="#L-239"><span class="linenos">239</span></a><span class="c1"># For pdoc</span>
+</span><span id="L-240"><a href="#L-240"><span class="linenos">240</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="L-241"><a href="#L-241"><span class="linenos">241</span></a>    <span class="s2">&quot;check&quot;</span><span class="p">,</span>
+</span><span id="L-242"><a href="#L-242"><span class="linenos">242</span></a>    <span class="s2">&quot;holds&quot;</span><span class="p">,</span>
+</span><span id="L-243"><a href="#L-243"><span class="linenos">243</span></a>    <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+</span><span id="L-244"><a href="#L-244"><span class="linenos">244</span></a>    <span class="s2">&quot;testmod&quot;</span><span class="p">,</span>
+</span><span id="L-245"><a href="#L-245"><span class="linenos">245</span></a>    <span class="s2">&quot;precondition&quot;</span><span class="p">,</span>
+</span><span id="L-246"><a href="#L-246"><span class="linenos">246</span></a>    <span class="s2">&quot;Enumerator&quot;</span><span class="p">,</span>
+</span><span id="L-247"><a href="#L-247"><span class="linenos">247</span></a><span class="p">]</span>
+</span><span id="L-248"><a href="#L-248"><span class="linenos">248</span></a>
+</span><span id="L-249"><a href="#L-249"><span class="linenos">249</span></a>
+</span><span id="L-250"><a href="#L-250"><span class="linenos">250</span></a><span class="c1"># Runs tests if this is not being imported as a module.</span>
+</span><span id="L-251"><a href="#L-251"><span class="linenos">251</span></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+</span><span id="L-252"><a href="#L-252"><span class="linenos">252</span></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">doctest</span>
+</span><span id="L-253"><a href="#L-253"><span class="linenos">253</span></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="L-254"><a href="#L-254"><span class="linenos">254</span></a>
+</span><span id="L-255"><a href="#L-255"><span class="linenos">255</span></a>    <span class="p">(</span><span class="n">failures</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">(</span><span class="n">optionflags</span><span class="o">=</span><span class="n">doctest</span><span class="o">.</span><span class="n">FAIL_FAST</span><span class="p">)</span>
+</span><span id="L-256"><a href="#L-256"><span class="linenos">256</span></a>    <span class="k">if</span> <span class="n">failures</span><span class="p">:</span>
+</span><span id="L-257"><a href="#L-257"><span class="linenos">257</span></a>        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -309,13 +645,13 @@ an if-expression as you would do with <code>unittest.main()</code> or <code>doct
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">check</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">prop</span>, </span><span class="param"><span class="o">*</span><span class="n">types</span>, </span><span class="param"><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span>, </span><span class="param"><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>, </span><span class="param"><span class="n">silent</span><span class="o">=</span><span class="kc">False</span></span><span class="return-annotation">):</span></span>
+        <span class="name">check</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">prop</span>, </span><span class="param"><span class="o">*</span><span class="n">types</span>, </span><span class="param"><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span>, </span><span class="param"><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>, </span><span class="param"><span class="n">silent</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">dump</span><span class="o">=</span><span class="mi">0</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="check-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#check"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="check-33"><a href="#check-33"><span class="linenos"> 33</span></a><span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">,</span> <span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="check-33"><a href="#check-33"><span class="linenos"> 33</span></a><span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">,</span> <span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dump</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 </span><span id="check-34"><a href="#check-34"><span class="linenos"> 34</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="check-35"><a href="#check-35"><span class="linenos"> 35</span></a><span class="sd">    Checks a property for several enumerated argument values.</span>
 </span><span id="check-36"><a href="#check-36"><span class="linenos"> 36</span></a><span class="sd">    Properties must have type hints</span>
@@ -396,40 +732,65 @@ an if-expression as you would do with <code>unittest.main()</code> or <code>doct
 </span><span id="check-111"><a href="#check-111"><span class="linenos">111</span></a><span class="sd">    Warning: property&#39;s return value is &lt;class &#39;inspect._empty&#39;&gt; and not &lt;class &#39;bool&#39;&gt;</span>
 </span><span id="check-112"><a href="#check-112"><span class="linenos">112</span></a><span class="sd">    +++ OK, passed 360 tests: prop_pow</span>
 </span><span id="check-113"><a href="#check-113"><span class="linenos">113</span></a><span class="sd">    True</span>
-</span><span id="check-114"><a href="#check-114"><span class="linenos">114</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="check-115"><a href="#check-115"><span class="linenos">115</span></a>    <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">silent</span>
-</span><span id="check-116"><a href="#check-116"><span class="linenos">116</span></a>    <span class="n">clear</span><span class="p">,</span> <span class="n">red</span><span class="p">,</span> <span class="n">green</span><span class="p">,</span> <span class="n">blue</span><span class="p">,</span> <span class="n">yellow</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">colour_escapes</span><span class="p">()</span>
-</span><span id="check-117"><a href="#check-117"><span class="linenos">117</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="p">:</span>
-</span><span id="check-118"><a href="#check-118"><span class="linenos">118</span></a>        <span class="k">if</span> <span class="n">return_type</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">bool</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
-</span><span id="check-119"><a href="#check-119"><span class="linenos">119</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">yellow</span><span class="si">}</span><span class="s2">Warning</span><span class="si">{</span><span class="n">clear</span><span class="si">}</span><span class="s2">: property&#39;s return value is </span><span class="si">{</span><span class="n">return_type</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span><span class="si">}</span><span class="s2"> and not </span><span class="si">{</span><span class="nb">bool</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="check-120"><a href="#check-120"><span class="linenos">120</span></a>        <span class="n">types</span> <span class="o">=</span> <span class="n">arg_types</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
-</span><span id="check-121"><a href="#check-121"><span class="linenos">121</span></a>    <span class="n">es</span> <span class="o">=</span> <span class="p">[</span><span class="n">Enumerator</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">types</span><span class="p">]</span>
-</span><span id="check-122"><a href="#check-122"><span class="linenos">122</span></a>    <span class="n">u</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># number of precondition fails</span>
-</span><span id="check-123"><a href="#check-123"><span class="linenos">123</span></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">args</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">Enumerator</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">es</span><span class="p">),</span> <span class="n">max_tests</span><span class="p">)):</span>
-</span><span id="check-124"><a href="#check-124"><span class="linenos">124</span></a>        <span class="c1"># TODO: remove slight code duplication below...</span>
-</span><span id="check-125"><a href="#check-125"><span class="linenos">125</span></a>        <span class="c1">#       have a single &quot;if not silent&quot;</span>
-</span><span id="check-126"><a href="#check-126"><span class="linenos">126</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="check-127"><a href="#check-127"><span class="linenos">127</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">prop</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
-</span><span id="check-128"><a href="#check-128"><span class="linenos">128</span></a>                <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
-</span><span id="check-129"><a href="#check-129"><span class="linenos">129</span></a>                    <span class="n">repr_args</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
-</span><span id="check-130"><a href="#check-130"><span class="linenos">130</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*** Failed! Falsifiable after </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> tests:&quot;</span><span class="p">)</span>
-</span><span id="check-131"><a href="#check-131"><span class="linenos">131</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">red</span><span class="si">}{</span><span class="n">prop</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}{</span><span class="n">clear</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">repr_args</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-</span><span id="check-132"><a href="#check-132"><span class="linenos">132</span></a>                <span class="k">return</span> <span class="kc">False</span>
-</span><span id="check-133"><a href="#check-133"><span class="linenos">133</span></a>        <span class="k">except</span> <span class="n">PreconditionUnmatched</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="check-134"><a href="#check-134"><span class="linenos">134</span></a>            <span class="n">u</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span id="check-135"><a href="#check-135"><span class="linenos">135</span></a>            <span class="k">continue</span>
-</span><span id="check-136"><a href="#check-136"><span class="linenos">136</span></a>        <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="check-137"><a href="#check-137"><span class="linenos">137</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
-</span><span id="check-138"><a href="#check-138"><span class="linenos">138</span></a>                <span class="n">repr_args</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
-</span><span id="check-139"><a href="#check-139"><span class="linenos">139</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*** Failed! Exception after </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> tests:&quot;</span><span class="p">)</span>
-</span><span id="check-140"><a href="#check-140"><span class="linenos">140</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">red</span><span class="si">}{</span><span class="n">prop</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}{</span><span class="n">clear</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">repr_args</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-</span><span id="check-141"><a href="#check-141"><span class="linenos">141</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    raised &#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-</span><span id="check-142"><a href="#check-142"><span class="linenos">142</span></a>            <span class="k">return</span> <span class="kc">False</span>
-</span><span id="check-143"><a href="#check-143"><span class="linenos">143</span></a>    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-</span><span id="check-144"><a href="#check-144"><span class="linenos">144</span></a>        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
-</span><span id="check-145"><a href="#check-145"><span class="linenos">145</span></a>        <span class="n">exhausted</span> <span class="o">=</span> <span class="s2">&quot; (exhausted)&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">max_tests</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-</span><span id="check-146"><a href="#check-146"><span class="linenos">146</span></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;+++ OK, passed </span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="n">u</span><span class="si">}</span><span class="s2"> tests</span><span class="si">{</span><span class="n">exhausted</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">green</span><span class="si">}{</span><span class="n">prop</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}{</span><span class="n">clear</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="check-147"><a href="#check-147"><span class="linenos">147</span></a>    <span class="k">return</span> <span class="kc">True</span>
+</span><span id="check-114"><a href="#check-114"><span class="linenos">114</span></a>
+</span><span id="check-115"><a href="#check-115"><span class="linenos">115</span></a><span class="sd">    You can ask `check()` to dump a number of test values</span>
+</span><span id="check-116"><a href="#check-116"><span class="linenos">116</span></a><span class="sd">    with the dump argument:</span>
+</span><span id="check-117"><a href="#check-117"><span class="linenos">117</span></a>
+</span><span id="check-118"><a href="#check-118"><span class="linenos">118</span></a><span class="sd">    &gt;&gt;&gt; check(lambda x: x * x &gt;= x, int, dump=6)</span>
+</span><span id="check-119"><a href="#check-119"><span class="linenos">119</span></a><span class="sd">    --- Testing &lt;lambda&gt;</span>
+</span><span id="check-120"><a href="#check-120"><span class="linenos">120</span></a><span class="sd">        &lt;lambda&gt;(0)</span>
+</span><span id="check-121"><a href="#check-121"><span class="linenos">121</span></a><span class="sd">        &lt;lambda&gt;(1)</span>
+</span><span id="check-122"><a href="#check-122"><span class="linenos">122</span></a><span class="sd">        &lt;lambda&gt;(-1)</span>
+</span><span id="check-123"><a href="#check-123"><span class="linenos">123</span></a><span class="sd">        &lt;lambda&gt;(2)</span>
+</span><span id="check-124"><a href="#check-124"><span class="linenos">124</span></a><span class="sd">        &lt;lambda&gt;(-2)</span>
+</span><span id="check-125"><a href="#check-125"><span class="linenos">125</span></a><span class="sd">        &lt;lambda&gt;(3)</span>
+</span><span id="check-126"><a href="#check-126"><span class="linenos">126</span></a><span class="sd">        ...</span>
+</span><span id="check-127"><a href="#check-127"><span class="linenos">127</span></a><span class="sd">    +++ OK, passed 360 tests: &lt;lambda&gt;</span>
+</span><span id="check-128"><a href="#check-128"><span class="linenos">128</span></a><span class="sd">    True</span>
+</span><span id="check-129"><a href="#check-129"><span class="linenos">129</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="check-130"><a href="#check-130"><span class="linenos">130</span></a>    <span class="n">silent</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">dump</span> <span class="k">else</span> <span class="n">silent</span>  <span class="c1"># dump overrides silent</span>
+</span><span id="check-131"><a href="#check-131"><span class="linenos">131</span></a>    <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">dump</span> <span class="k">else</span> <span class="n">verbose</span>  <span class="c1"># dump overrides verbose</span>
+</span><span id="check-132"><a href="#check-132"><span class="linenos">132</span></a>    <span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">silent</span>  <span class="c1"># silent overrides verbose</span>
+</span><span id="check-133"><a href="#check-133"><span class="linenos">133</span></a>    <span class="n">clear</span><span class="p">,</span> <span class="n">red</span><span class="p">,</span> <span class="n">green</span><span class="p">,</span> <span class="n">blue</span><span class="p">,</span> <span class="n">yellow</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">colour_escapes</span><span class="p">()</span>
+</span><span id="check-134"><a href="#check-134"><span class="linenos">134</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="p">:</span>
+</span><span id="check-135"><a href="#check-135"><span class="linenos">135</span></a>        <span class="k">if</span> <span class="n">return_type</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">bool</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
+</span><span id="check-136"><a href="#check-136"><span class="linenos">136</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">yellow</span><span class="si">}</span><span class="s2">Warning</span><span class="si">{</span><span class="n">clear</span><span class="si">}</span><span class="s2">: property&#39;s return value is </span><span class="si">{</span><span class="n">return_type</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span><span class="si">}</span><span class="s2"> and not </span><span class="si">{</span><span class="nb">bool</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="check-137"><a href="#check-137"><span class="linenos">137</span></a>        <span class="n">types</span> <span class="o">=</span> <span class="n">arg_types</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+</span><span id="check-138"><a href="#check-138"><span class="linenos">138</span></a>    <span class="n">es</span> <span class="o">=</span> <span class="p">[</span><span class="n">Enumerator</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">types</span><span class="p">]</span>
+</span><span id="check-139"><a href="#check-139"><span class="linenos">139</span></a>    <span class="k">if</span> <span class="n">dump</span><span class="p">:</span>
+</span><span id="check-140"><a href="#check-140"><span class="linenos">140</span></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--- Testing </span><span class="si">{</span><span class="n">yellow</span><span class="si">}{</span><span class="n">prop</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}{</span><span class="n">clear</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="check-141"><a href="#check-141"><span class="linenos">141</span></a>    <span class="n">u</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># number of precondition fails</span>
+</span><span id="check-142"><a href="#check-142"><span class="linenos">142</span></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">args</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">Enumerator</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">es</span><span class="p">),</span> <span class="n">max_tests</span><span class="p">)):</span>
+</span><span id="check-143"><a href="#check-143"><span class="linenos">143</span></a>        <span class="c1"># TODO: remove slight code duplication below...</span>
+</span><span id="check-144"><a href="#check-144"><span class="linenos">144</span></a>        <span class="c1">#       have a single &quot;if not silent&quot;</span>
+</span><span id="check-145"><a href="#check-145"><span class="linenos">145</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="check-146"><a href="#check-146"><span class="linenos">146</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">prop</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span id="check-147"><a href="#check-147"><span class="linenos">147</span></a>                <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
+</span><span id="check-148"><a href="#check-148"><span class="linenos">148</span></a>                    <span class="n">repr_args</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+</span><span id="check-149"><a href="#check-149"><span class="linenos">149</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*** Failed! Falsifiable after </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> tests:&quot;</span><span class="p">)</span>
+</span><span id="check-150"><a href="#check-150"><span class="linenos">150</span></a>                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">red</span><span class="si">}{</span><span class="n">prop</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}{</span><span class="n">clear</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">repr_args</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span id="check-151"><a href="#check-151"><span class="linenos">151</span></a>                <span class="k">return</span> <span class="kc">False</span>
+</span><span id="check-152"><a href="#check-152"><span class="linenos">152</span></a>        <span class="k">except</span> <span class="n">PreconditionUnmatched</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="check-153"><a href="#check-153"><span class="linenos">153</span></a>            <span class="n">u</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="check-154"><a href="#check-154"><span class="linenos">154</span></a>            <span class="k">continue</span>
+</span><span id="check-155"><a href="#check-155"><span class="linenos">155</span></a>        <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="check-156"><a href="#check-156"><span class="linenos">156</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
+</span><span id="check-157"><a href="#check-157"><span class="linenos">157</span></a>                <span class="n">repr_args</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+</span><span id="check-158"><a href="#check-158"><span class="linenos">158</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*** Failed! Exception after </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> tests:&quot;</span><span class="p">)</span>
+</span><span id="check-159"><a href="#check-159"><span class="linenos">159</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">red</span><span class="si">}{</span><span class="n">prop</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}{</span><span class="n">clear</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">repr_args</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span id="check-160"><a href="#check-160"><span class="linenos">160</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    raised &#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+</span><span id="check-161"><a href="#check-161"><span class="linenos">161</span></a>            <span class="k">return</span> <span class="kc">False</span>
+</span><span id="check-162"><a href="#check-162"><span class="linenos">162</span></a>        <span class="k">if</span> <span class="n">dump</span><span class="p">:</span>
+</span><span id="check-163"><a href="#check-163"><span class="linenos">163</span></a>            <span class="k">if</span> <span class="n">i</span><span class="o">-</span><span class="n">u</span> <span class="o">&lt;</span> <span class="n">dump</span><span class="p">:</span>
+</span><span id="check-164"><a href="#check-164"><span class="linenos">164</span></a>                <span class="n">repr_args</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+</span><span id="check-165"><a href="#check-165"><span class="linenos">165</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">prop</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}{</span><span class="n">clear</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">repr_args</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span id="check-166"><a href="#check-166"><span class="linenos">166</span></a>            <span class="k">elif</span> <span class="n">i</span><span class="o">-</span><span class="n">u</span> <span class="o">==</span> <span class="n">dump</span><span class="p">:</span>
+</span><span id="check-167"><a href="#check-167"><span class="linenos">167</span></a>                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;    ...&quot;</span><span class="p">)</span>
+</span><span id="check-168"><a href="#check-168"><span class="linenos">168</span></a>    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+</span><span id="check-169"><a href="#check-169"><span class="linenos">169</span></a>        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="check-170"><a href="#check-170"><span class="linenos">170</span></a>        <span class="n">exhausted</span> <span class="o">=</span> <span class="s2">&quot; (exhausted)&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">max_tests</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+</span><span id="check-171"><a href="#check-171"><span class="linenos">171</span></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;+++ OK, passed </span><span class="si">{</span><span class="n">i</span><span class="o">-</span><span class="n">u</span><span class="si">}</span><span class="s2"> tests</span><span class="si">{</span><span class="n">exhausted</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">green</span><span class="si">}{</span><span class="n">prop</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}{</span><span class="n">clear</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="check-172"><a href="#check-172"><span class="linenos">172</span></a>    <span class="k">return</span> <span class="kc">True</span>
 </span></pre></div>
 
 
@@ -548,6 +909,24 @@ otherwise a warning is issued:</p>
 <span class="go">True</span>
 </code></pre>
 </div>
+
+<p>You can ask <code><a href="#check">check()</a></code> to dump a number of test values
+with the dump argument:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">check</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dump</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">--- Testing &lt;lambda&gt;</span>
+<span class="go">    &lt;lambda&gt;(0)</span>
+<span class="go">    &lt;lambda&gt;(1)</span>
+<span class="go">    &lt;lambda&gt;(-1)</span>
+<span class="go">    &lt;lambda&gt;(2)</span>
+<span class="go">    &lt;lambda&gt;(-2)</span>
+<span class="go">    &lt;lambda&gt;(3)</span>
+<span class="go">    ...</span>
+<span class="go">+++ OK, passed 360 tests: &lt;lambda&gt;</span>
+<span class="go">True</span>
+</code></pre>
+</div>
 </div>
 
 
@@ -563,23 +942,23 @@ otherwise a warning is issued:</p>
 
     </div>
     <a class="headerlink" href="#holds"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="holds-150"><a href="#holds-150"><span class="linenos">150</span></a><span class="k">def</span><span class="w"> </span><span class="nf">holds</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">,</span> <span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span><span class="p">):</span>
-</span><span id="holds-151"><a href="#holds-151"><span class="linenos">151</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="holds-152"><a href="#holds-152"><span class="linenos">152</span></a><span class="sd">    Alias to `check(prop, silent=True)`.</span>
-</span><span id="holds-153"><a href="#holds-153"><span class="linenos">153</span></a><span class="sd">    Returns a boolean indicating whether the given argument property holds</span>
-</span><span id="holds-154"><a href="#holds-154"><span class="linenos">154</span></a><span class="sd">    for a (given) number of maximum tests.</span>
-</span><span id="holds-155"><a href="#holds-155"><span class="linenos">155</span></a>
-</span><span id="holds-156"><a href="#holds-156"><span class="linenos">156</span></a><span class="sd">    &gt;&gt;&gt; def prop_commute(x:int, y:int) -&gt; bool:</span>
-</span><span id="holds-157"><a href="#holds-157"><span class="linenos">157</span></a><span class="sd">    ...     return x + y == y + x</span>
-</span><span id="holds-158"><a href="#holds-158"><span class="linenos">158</span></a><span class="sd">    &gt;&gt;&gt; holds(prop_commute)</span>
-</span><span id="holds-159"><a href="#holds-159"><span class="linenos">159</span></a><span class="sd">    True</span>
-</span><span id="holds-160"><a href="#holds-160"><span class="linenos">160</span></a>
-</span><span id="holds-161"><a href="#holds-161"><span class="linenos">161</span></a><span class="sd">    &gt;&gt;&gt; def prop_increase(x:int, y:int) -&gt; bool:</span>
-</span><span id="holds-162"><a href="#holds-162"><span class="linenos">162</span></a><span class="sd">    ...     return x + y &gt; x</span>
-</span><span id="holds-163"><a href="#holds-163"><span class="linenos">163</span></a><span class="sd">    &gt;&gt;&gt; holds(prop_increase)</span>
-</span><span id="holds-164"><a href="#holds-164"><span class="linenos">164</span></a><span class="sd">    False</span>
-</span><span id="holds-165"><a href="#holds-165"><span class="linenos">165</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="holds-166"><a href="#holds-166"><span class="linenos">166</span></a>    <span class="k">return</span> <span class="n">check</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">,</span> <span class="n">max_tests</span><span class="o">=</span><span class="n">max_tests</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="holds-175"><a href="#holds-175"><span class="linenos">175</span></a><span class="k">def</span><span class="w"> </span><span class="nf">holds</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">,</span> <span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span><span class="p">):</span>
+</span><span id="holds-176"><a href="#holds-176"><span class="linenos">176</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="holds-177"><a href="#holds-177"><span class="linenos">177</span></a><span class="sd">    Alias to `check(prop, silent=True)`.</span>
+</span><span id="holds-178"><a href="#holds-178"><span class="linenos">178</span></a><span class="sd">    Returns a boolean indicating whether the given argument property holds</span>
+</span><span id="holds-179"><a href="#holds-179"><span class="linenos">179</span></a><span class="sd">    for a (given) number of maximum tests.</span>
+</span><span id="holds-180"><a href="#holds-180"><span class="linenos">180</span></a>
+</span><span id="holds-181"><a href="#holds-181"><span class="linenos">181</span></a><span class="sd">    &gt;&gt;&gt; def prop_commute(x:int, y:int) -&gt; bool:</span>
+</span><span id="holds-182"><a href="#holds-182"><span class="linenos">182</span></a><span class="sd">    ...     return x + y == y + x</span>
+</span><span id="holds-183"><a href="#holds-183"><span class="linenos">183</span></a><span class="sd">    &gt;&gt;&gt; holds(prop_commute)</span>
+</span><span id="holds-184"><a href="#holds-184"><span class="linenos">184</span></a><span class="sd">    True</span>
+</span><span id="holds-185"><a href="#holds-185"><span class="linenos">185</span></a>
+</span><span id="holds-186"><a href="#holds-186"><span class="linenos">186</span></a><span class="sd">    &gt;&gt;&gt; def prop_increase(x:int, y:int) -&gt; bool:</span>
+</span><span id="holds-187"><a href="#holds-187"><span class="linenos">187</span></a><span class="sd">    ...     return x + y &gt; x</span>
+</span><span id="holds-188"><a href="#holds-188"><span class="linenos">188</span></a><span class="sd">    &gt;&gt;&gt; holds(prop_increase)</span>
+</span><span id="holds-189"><a href="#holds-189"><span class="linenos">189</span></a><span class="sd">    False</span>
+</span><span id="holds-190"><a href="#holds-190"><span class="linenos">190</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="holds-191"><a href="#holds-191"><span class="linenos">191</span></a>    <span class="k">return</span> <span class="n">check</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">,</span> <span class="n">max_tests</span><span class="o">=</span><span class="n">max_tests</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -611,35 +990,35 @@ for a (given) number of maximum tests.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">main</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span>, </span><span class="param"><span class="n">silent</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">exit_on_failure</span><span class="o">=</span><span class="kc">True</span></span><span class="return-annotation">):</span></span>
+        <span class="name">main</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span>,</span><span class="param">	<span class="n">silent</span><span class="o">=</span><span class="kc">False</span>,</span><span class="param">	<span class="n">verbose</span><span class="o">=</span><span class="kc">False</span>,</span><span class="param">	<span class="n">dump</span><span class="o">=</span><span class="mi">0</span>,</span><span class="param">	<span class="n">exit_on_failure</span><span class="o">=</span><span class="kc">True</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="main-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#main"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="main-169"><a href="#main-169"><span class="linenos">169</span></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">exit_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-</span><span id="main-170"><a href="#main-170"><span class="linenos">170</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="main-171"><a href="#main-171"><span class="linenos">171</span></a><span class="sd">    Tests all properties present in the current file,</span>
-</span><span id="main-172"><a href="#main-172"><span class="linenos">172</span></a><span class="sd">    report results and</span>
-</span><span id="main-173"><a href="#main-173"><span class="linenos">173</span></a><span class="sd">    exit with an error in case one of the properties fails.</span>
-</span><span id="main-174"><a href="#main-174"><span class="linenos">174</span></a>
-</span><span id="main-175"><a href="#main-175"><span class="linenos">175</span></a><span class="sd">    This is analogous to `unittest.main()`</span>
-</span><span id="main-176"><a href="#main-176"><span class="linenos">176</span></a><span class="sd">    and is generally used at the end of a Python file as:</span>
-</span><span id="main-177"><a href="#main-177"><span class="linenos">177</span></a>
-</span><span id="main-178"><a href="#main-178"><span class="linenos">178</span></a><span class="sd">        if __name__ == &#39;__main__&#39;:</span>
-</span><span id="main-179"><a href="#main-179"><span class="linenos">179</span></a><span class="sd">            leancheck.main()</span>
-</span><span id="main-180"><a href="#main-180"><span class="linenos">180</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="main-181"><a href="#main-181"><span class="linenos">181</span></a>    <span class="n">n_failures</span><span class="p">,</span> <span class="n">n_properties</span> <span class="o">=</span> <span class="n">testmod</span><span class="p">(</span><span class="n">max_tests</span><span class="o">=</span><span class="n">max_tests</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-</span><span id="main-182"><a href="#main-182"><span class="linenos">182</span></a>    <span class="n">clear</span><span class="p">,</span> <span class="n">red</span><span class="p">,</span> <span class="n">green</span><span class="p">,</span> <span class="n">blue</span><span class="p">,</span> <span class="n">yellow</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">colour_escapes</span><span class="p">()</span>
-</span><span id="main-183"><a href="#main-183"><span class="linenos">183</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
-</span><span id="main-184"><a href="#main-184"><span class="linenos">184</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">n_properties</span><span class="p">:</span>
-</span><span id="main-185"><a href="#main-185"><span class="linenos">185</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">yellow</span><span class="si">}</span><span class="s2">Warning</span><span class="si">{</span><span class="n">clear</span><span class="si">}</span><span class="s2">: no properties found&quot;</span><span class="p">)</span>
-</span><span id="main-186"><a href="#main-186"><span class="linenos">186</span></a>        <span class="k">if</span> <span class="n">n_failures</span><span class="p">:</span>
-</span><span id="main-187"><a href="#main-187"><span class="linenos">187</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">red</span><span class="si">}</span><span class="s2">*** </span><span class="si">{</span><span class="n">n_failures</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">n_properties</span><span class="si">}</span><span class="s2"> properties failed</span><span class="si">{</span><span class="n">clear</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="main-188"><a href="#main-188"><span class="linenos">188</span></a>        <span class="k">elif</span> <span class="n">verbose</span><span class="p">:</span>
-</span><span id="main-189"><a href="#main-189"><span class="linenos">189</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">green</span><span class="si">}</span><span class="s2">+++ </span><span class="si">{</span><span class="n">n_properties</span><span class="si">}</span><span class="s2"> properties passed</span><span class="si">{</span><span class="n">clear</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="main-190"><a href="#main-190"><span class="linenos">190</span></a>    <span class="k">if</span> <span class="n">n_failures</span> <span class="ow">and</span> <span class="n">exit_on_failure</span><span class="p">:</span>
-</span><span id="main-191"><a href="#main-191"><span class="linenos">191</span></a>        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="main-194"><a href="#main-194"><span class="linenos">194</span></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dump</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">exit_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span id="main-195"><a href="#main-195"><span class="linenos">195</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="main-196"><a href="#main-196"><span class="linenos">196</span></a><span class="sd">    Tests all properties present in the current file,</span>
+</span><span id="main-197"><a href="#main-197"><span class="linenos">197</span></a><span class="sd">    report results and</span>
+</span><span id="main-198"><a href="#main-198"><span class="linenos">198</span></a><span class="sd">    exit with an error in case one of the properties fails.</span>
+</span><span id="main-199"><a href="#main-199"><span class="linenos">199</span></a>
+</span><span id="main-200"><a href="#main-200"><span class="linenos">200</span></a><span class="sd">    This is analogous to `unittest.main()`</span>
+</span><span id="main-201"><a href="#main-201"><span class="linenos">201</span></a><span class="sd">    and is generally used at the end of a Python file as:</span>
+</span><span id="main-202"><a href="#main-202"><span class="linenos">202</span></a>
+</span><span id="main-203"><a href="#main-203"><span class="linenos">203</span></a><span class="sd">        if __name__ == &#39;__main__&#39;:</span>
+</span><span id="main-204"><a href="#main-204"><span class="linenos">204</span></a><span class="sd">            leancheck.main()</span>
+</span><span id="main-205"><a href="#main-205"><span class="linenos">205</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="main-206"><a href="#main-206"><span class="linenos">206</span></a>    <span class="n">n_failures</span><span class="p">,</span> <span class="n">n_properties</span> <span class="o">=</span> <span class="n">testmod</span><span class="p">(</span><span class="n">max_tests</span><span class="o">=</span><span class="n">max_tests</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">dump</span><span class="o">=</span><span class="n">dump</span><span class="p">)</span>
+</span><span id="main-207"><a href="#main-207"><span class="linenos">207</span></a>    <span class="n">clear</span><span class="p">,</span> <span class="n">red</span><span class="p">,</span> <span class="n">green</span><span class="p">,</span> <span class="n">blue</span><span class="p">,</span> <span class="n">yellow</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">colour_escapes</span><span class="p">()</span>
+</span><span id="main-208"><a href="#main-208"><span class="linenos">208</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
+</span><span id="main-209"><a href="#main-209"><span class="linenos">209</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">n_properties</span><span class="p">:</span>
+</span><span id="main-210"><a href="#main-210"><span class="linenos">210</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">yellow</span><span class="si">}</span><span class="s2">Warning</span><span class="si">{</span><span class="n">clear</span><span class="si">}</span><span class="s2">: no properties found&quot;</span><span class="p">)</span>
+</span><span id="main-211"><a href="#main-211"><span class="linenos">211</span></a>        <span class="k">if</span> <span class="n">n_failures</span><span class="p">:</span>
+</span><span id="main-212"><a href="#main-212"><span class="linenos">212</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">red</span><span class="si">}</span><span class="s2">*** </span><span class="si">{</span><span class="n">n_failures</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">n_properties</span><span class="si">}</span><span class="s2"> properties failed</span><span class="si">{</span><span class="n">clear</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="main-213"><a href="#main-213"><span class="linenos">213</span></a>        <span class="k">elif</span> <span class="n">verbose</span><span class="p">:</span>
+</span><span id="main-214"><a href="#main-214"><span class="linenos">214</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">green</span><span class="si">}</span><span class="s2">+++ </span><span class="si">{</span><span class="n">n_properties</span><span class="si">}</span><span class="s2"> properties passed</span><span class="si">{</span><span class="n">clear</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="main-215"><a href="#main-215"><span class="linenos">215</span></a>    <span class="k">if</span> <span class="n">n_failures</span> <span class="ow">and</span> <span class="n">exit_on_failure</span><span class="p">:</span>
+</span><span id="main-216"><a href="#main-216"><span class="linenos">216</span></a>        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -662,44 +1041,46 @@ and is generally used at the end of a Python file as:</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">testmod</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span>, </span><span class="param"><span class="n">silent</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span></span><span class="return-annotation">):</span></span>
+        <span class="name">testmod</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span>, </span><span class="param"><span class="n">silent</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">verbose</span><span class="o">=</span><span class="kc">False</span>, </span><span class="param"><span class="n">dump</span><span class="o">=</span><span class="mi">0</span></span><span class="return-annotation">):</span></span>
 
                 <label class="view-source-button" for="testmod-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#testmod"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="testmod-194"><a href="#testmod-194"><span class="linenos">194</span></a><span class="k">def</span><span class="w"> </span><span class="nf">testmod</span><span class="p">(</span><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-</span><span id="testmod-195"><a href="#testmod-195"><span class="linenos">195</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="testmod-196"><a href="#testmod-196"><span class="linenos">196</span></a><span class="sd">    Tests all properties present in the current file</span>
-</span><span id="testmod-197"><a href="#testmod-197"><span class="linenos">197</span></a><span class="sd">    and report the results.</span>
-</span><span id="testmod-198"><a href="#testmod-198"><span class="linenos">198</span></a>
-</span><span id="testmod-199"><a href="#testmod-199"><span class="linenos">199</span></a><span class="sd">    This is analogous to `doctest.testmod()`</span>
-</span><span id="testmod-200"><a href="#testmod-200"><span class="linenos">200</span></a><span class="sd">    and is generally used at the end of a Python file as:</span>
-</span><span id="testmod-201"><a href="#testmod-201"><span class="linenos">201</span></a>
-</span><span id="testmod-202"><a href="#testmod-202"><span class="linenos">202</span></a><span class="sd">        if __name__ == &#39;__main__&#39;:</span>
-</span><span id="testmod-203"><a href="#testmod-203"><span class="linenos">203</span></a><span class="sd">            n_failures, n_properties = leancheck.testmod()</span>
-</span><span id="testmod-204"><a href="#testmod-204"><span class="linenos">204</span></a><span class="sd">            if n_failures:</span>
-</span><span id="testmod-205"><a href="#testmod-205"><span class="linenos">205</span></a><span class="sd">                sys.exit(1)</span>
-</span><span id="testmod-206"><a href="#testmod-206"><span class="linenos">206</span></a>
-</span><span id="testmod-207"><a href="#testmod-207"><span class="linenos">207</span></a><span class="sd">    Depending on your use-case</span>
-</span><span id="testmod-208"><a href="#testmod-208"><span class="linenos">208</span></a><span class="sd">    you may be better off calling `leancheck.main()` instead.</span>
-</span><span id="testmod-209"><a href="#testmod-209"><span class="linenos">209</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="testmod-210"><a href="#testmod-210"><span class="linenos">210</span></a>    <span class="n">n_failures</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span id="testmod-211"><a href="#testmod-211"><span class="linenos">211</span></a>    <span class="n">n_properties</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span id="testmod-212"><a href="#testmod-212"><span class="linenos">212</span></a>
-</span><span id="testmod-213"><a href="#testmod-213"><span class="linenos">213</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">lineno</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
-</span><span id="testmod-214"><a href="#testmod-214"><span class="linenos">214</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="testmod-215"><a href="#testmod-215"><span class="linenos">215</span></a>            <span class="k">return</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_firstlineno</span>
-</span><span id="testmod-216"><a href="#testmod-216"><span class="linenos">216</span></a>        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-</span><span id="testmod-217"><a href="#testmod-217"><span class="linenos">217</span></a>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
-</span><span id="testmod-218"><a href="#testmod-218"><span class="linenos">218</span></a>
-</span><span id="testmod-219"><a href="#testmod-219"><span class="linenos">219</span></a>    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">member</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s2">&quot;__main__&quot;</span><span class="p">]),</span> <span class="n">key</span><span class="o">=</span><span class="n">lineno</span><span class="p">):</span>
-</span><span id="testmod-220"><a href="#testmod-220"><span class="linenos">220</span></a>        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;prop_&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">member</span><span class="p">):</span>
-</span><span id="testmod-221"><a href="#testmod-221"><span class="linenos">221</span></a>            <span class="n">n_properties</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span id="testmod-222"><a href="#testmod-222"><span class="linenos">222</span></a>            <span class="n">passed</span> <span class="o">=</span> <span class="n">check</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">max_tests</span><span class="o">=</span><span class="n">max_tests</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-</span><span id="testmod-223"><a href="#testmod-223"><span class="linenos">223</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">passed</span><span class="p">:</span>
-</span><span id="testmod-224"><a href="#testmod-224"><span class="linenos">224</span></a>                <span class="n">n_failures</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span id="testmod-225"><a href="#testmod-225"><span class="linenos">225</span></a>    <span class="k">return</span> <span class="p">(</span><span class="n">n_failures</span><span class="p">,</span> <span class="n">n_properties</span><span class="p">)</span>  <span class="c1"># just like doctest.testmod()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="testmod-219"><a href="#testmod-219"><span class="linenos">219</span></a><span class="k">def</span><span class="w"> </span><span class="nf">testmod</span><span class="p">(</span><span class="n">max_tests</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dump</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+</span><span id="testmod-220"><a href="#testmod-220"><span class="linenos">220</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="testmod-221"><a href="#testmod-221"><span class="linenos">221</span></a><span class="sd">    Tests all properties present in the current file</span>
+</span><span id="testmod-222"><a href="#testmod-222"><span class="linenos">222</span></a><span class="sd">    and report the results.</span>
+</span><span id="testmod-223"><a href="#testmod-223"><span class="linenos">223</span></a>
+</span><span id="testmod-224"><a href="#testmod-224"><span class="linenos">224</span></a><span class="sd">    This is analogous to `doctest.testmod()`</span>
+</span><span id="testmod-225"><a href="#testmod-225"><span class="linenos">225</span></a><span class="sd">    and is generally used at the end of a Python file as:</span>
+</span><span id="testmod-226"><a href="#testmod-226"><span class="linenos">226</span></a>
+</span><span id="testmod-227"><a href="#testmod-227"><span class="linenos">227</span></a><span class="sd">        if __name__ == &#39;__main__&#39;:</span>
+</span><span id="testmod-228"><a href="#testmod-228"><span class="linenos">228</span></a><span class="sd">            n_failures, n_properties = leancheck.testmod()</span>
+</span><span id="testmod-229"><a href="#testmod-229"><span class="linenos">229</span></a><span class="sd">            if n_failures:</span>
+</span><span id="testmod-230"><a href="#testmod-230"><span class="linenos">230</span></a><span class="sd">                sys.exit(1)</span>
+</span><span id="testmod-231"><a href="#testmod-231"><span class="linenos">231</span></a>
+</span><span id="testmod-232"><a href="#testmod-232"><span class="linenos">232</span></a><span class="sd">    Depending on your use-case</span>
+</span><span id="testmod-233"><a href="#testmod-233"><span class="linenos">233</span></a><span class="sd">    you may be better off calling `leancheck.main()` instead.</span>
+</span><span id="testmod-234"><a href="#testmod-234"><span class="linenos">234</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="testmod-235"><a href="#testmod-235"><span class="linenos">235</span></a>    <span class="n">n_failures</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="testmod-236"><a href="#testmod-236"><span class="linenos">236</span></a>    <span class="n">n_properties</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="testmod-237"><a href="#testmod-237"><span class="linenos">237</span></a>
+</span><span id="testmod-238"><a href="#testmod-238"><span class="linenos">238</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">lineno</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+</span><span id="testmod-239"><a href="#testmod-239"><span class="linenos">239</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="testmod-240"><a href="#testmod-240"><span class="linenos">240</span></a>            <span class="k">return</span> <span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_firstlineno</span>
+</span><span id="testmod-241"><a href="#testmod-241"><span class="linenos">241</span></a>        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+</span><span id="testmod-242"><a href="#testmod-242"><span class="linenos">242</span></a>            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+</span><span id="testmod-243"><a href="#testmod-243"><span class="linenos">243</span></a>
+</span><span id="testmod-244"><a href="#testmod-244"><span class="linenos">244</span></a>    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">member</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="s2">&quot;__main__&quot;</span><span class="p">]),</span> <span class="n">key</span><span class="o">=</span><span class="n">lineno</span><span class="p">):</span>
+</span><span id="testmod-245"><a href="#testmod-245"><span class="linenos">245</span></a>        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;prop_&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span><span class="n">member</span><span class="p">):</span>
+</span><span id="testmod-246"><a href="#testmod-246"><span class="linenos">246</span></a>            <span class="k">if</span> <span class="n">dump</span> <span class="ow">and</span> <span class="n">n_properties</span><span class="p">:</span>
+</span><span id="testmod-247"><a href="#testmod-247"><span class="linenos">247</span></a>                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># blank line between each property output on dump mode</span>
+</span><span id="testmod-248"><a href="#testmod-248"><span class="linenos">248</span></a>            <span class="n">n_properties</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="testmod-249"><a href="#testmod-249"><span class="linenos">249</span></a>            <span class="n">passed</span> <span class="o">=</span> <span class="n">check</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">max_tests</span><span class="o">=</span><span class="n">max_tests</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">dump</span><span class="o">=</span><span class="n">dump</span><span class="p">)</span>
+</span><span id="testmod-250"><a href="#testmod-250"><span class="linenos">250</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">passed</span><span class="p">:</span>
+</span><span id="testmod-251"><a href="#testmod-251"><span class="linenos">251</span></a>                <span class="n">n_failures</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="testmod-252"><a href="#testmod-252"><span class="linenos">252</span></a>    <span class="k">return</span> <span class="p">(</span><span class="n">n_failures</span><span class="p">,</span> <span class="n">n_properties</span><span class="p">)</span>  <span class="c1"># just like doctest.testmod()</span>
 </span></pre></div>
 
 
@@ -732,34 +1113,34 @@ you may be better off calling <code><a href="#main">leancheck.main()</a></code> 
 
     </div>
     <a class="headerlink" href="#precondition"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="precondition-228"><a href="#precondition-228"><span class="linenos">228</span></a><span class="k">def</span><span class="w"> </span><span class="nf">precondition</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
-</span><span id="precondition-229"><a href="#precondition-229"><span class="linenos">229</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="precondition-230"><a href="#precondition-230"><span class="linenos">230</span></a><span class="sd">    Allows one to define a precondition for a property.</span>
-</span><span id="precondition-231"><a href="#precondition-231"><span class="linenos">231</span></a>
-</span><span id="precondition-232"><a href="#precondition-232"><span class="linenos">232</span></a><span class="sd">    &gt;&gt;&gt; def prop_min(xs: list[int]) -&gt; bool:</span>
-</span><span id="precondition-233"><a href="#precondition-233"><span class="linenos">233</span></a><span class="sd">    ...     return sorted(xs)[0] == min(xs)</span>
-</span><span id="precondition-234"><a href="#precondition-234"><span class="linenos">234</span></a><span class="sd">    &gt;&gt;&gt; check(prop_min)</span>
-</span><span id="precondition-235"><a href="#precondition-235"><span class="linenos">235</span></a><span class="sd">    *** Failed! Exception after 1 tests:</span>
-</span><span id="precondition-236"><a href="#precondition-236"><span class="linenos">236</span></a><span class="sd">        prop_min([])</span>
-</span><span id="precondition-237"><a href="#precondition-237"><span class="linenos">237</span></a><span class="sd">        raised &#39;list index out of range&#39;</span>
-</span><span id="precondition-238"><a href="#precondition-238"><span class="linenos">238</span></a><span class="sd">    False</span>
-</span><span id="precondition-239"><a href="#precondition-239"><span class="linenos">239</span></a>
-</span><span id="precondition-240"><a href="#precondition-240"><span class="linenos">240</span></a><span class="sd">    A correct version of the above property,</span>
-</span><span id="precondition-241"><a href="#precondition-241"><span class="linenos">241</span></a><span class="sd">    requires that the given input list is non-empty.</span>
-</span><span id="precondition-242"><a href="#precondition-242"><span class="linenos">242</span></a><span class="sd">    This can be specified in LeanCheck with the `precondition` directive.</span>
-</span><span id="precondition-243"><a href="#precondition-243"><span class="linenos">243</span></a>
-</span><span id="precondition-244"><a href="#precondition-244"><span class="linenos">244</span></a><span class="sd">    &gt;&gt;&gt; def prop_min(xs: list[int]) -&gt; bool:</span>
-</span><span id="precondition-245"><a href="#precondition-245"><span class="linenos">245</span></a><span class="sd">    ...     precondition(len(xs) &gt; 0)</span>
-</span><span id="precondition-246"><a href="#precondition-246"><span class="linenos">246</span></a><span class="sd">    ...     return sorted(xs)[0] == min(xs)</span>
-</span><span id="precondition-247"><a href="#precondition-247"><span class="linenos">247</span></a><span class="sd">    &gt;&gt;&gt; check(prop_min)</span>
-</span><span id="precondition-248"><a href="#precondition-248"><span class="linenos">248</span></a><span class="sd">    +++ OK, passed 359 tests: prop_min</span>
-</span><span id="precondition-249"><a href="#precondition-249"><span class="linenos">249</span></a><span class="sd">    True</span>
-</span><span id="precondition-250"><a href="#precondition-250"><span class="linenos">250</span></a>
-</span><span id="precondition-251"><a href="#precondition-251"><span class="linenos">251</span></a><span class="sd">    Above, `precondition(xs)` would be equivalent.</span>
-</span><span id="precondition-252"><a href="#precondition-252"><span class="linenos">252</span></a><span class="sd">    We use the verbose option for clarity.</span>
-</span><span id="precondition-253"><a href="#precondition-253"><span class="linenos">253</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="precondition-254"><a href="#precondition-254"><span class="linenos">254</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">condition</span><span class="p">:</span>
-</span><span id="precondition-255"><a href="#precondition-255"><span class="linenos">255</span></a>        <span class="k">raise</span> <span class="n">PreconditionUnmatched</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="precondition-255"><a href="#precondition-255"><span class="linenos">255</span></a><span class="k">def</span><span class="w"> </span><span class="nf">precondition</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span id="precondition-256"><a href="#precondition-256"><span class="linenos">256</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="precondition-257"><a href="#precondition-257"><span class="linenos">257</span></a><span class="sd">    Allows one to define a precondition for a property.</span>
+</span><span id="precondition-258"><a href="#precondition-258"><span class="linenos">258</span></a>
+</span><span id="precondition-259"><a href="#precondition-259"><span class="linenos">259</span></a><span class="sd">    &gt;&gt;&gt; def prop_min(xs: list[int]) -&gt; bool:</span>
+</span><span id="precondition-260"><a href="#precondition-260"><span class="linenos">260</span></a><span class="sd">    ...     return sorted(xs)[0] == min(xs)</span>
+</span><span id="precondition-261"><a href="#precondition-261"><span class="linenos">261</span></a><span class="sd">    &gt;&gt;&gt; check(prop_min)</span>
+</span><span id="precondition-262"><a href="#precondition-262"><span class="linenos">262</span></a><span class="sd">    *** Failed! Exception after 1 tests:</span>
+</span><span id="precondition-263"><a href="#precondition-263"><span class="linenos">263</span></a><span class="sd">        prop_min([])</span>
+</span><span id="precondition-264"><a href="#precondition-264"><span class="linenos">264</span></a><span class="sd">        raised &#39;list index out of range&#39;</span>
+</span><span id="precondition-265"><a href="#precondition-265"><span class="linenos">265</span></a><span class="sd">    False</span>
+</span><span id="precondition-266"><a href="#precondition-266"><span class="linenos">266</span></a>
+</span><span id="precondition-267"><a href="#precondition-267"><span class="linenos">267</span></a><span class="sd">    A correct version of the above property,</span>
+</span><span id="precondition-268"><a href="#precondition-268"><span class="linenos">268</span></a><span class="sd">    requires that the given input list is non-empty.</span>
+</span><span id="precondition-269"><a href="#precondition-269"><span class="linenos">269</span></a><span class="sd">    This can be specified in LeanCheck with the `precondition` directive.</span>
+</span><span id="precondition-270"><a href="#precondition-270"><span class="linenos">270</span></a>
+</span><span id="precondition-271"><a href="#precondition-271"><span class="linenos">271</span></a><span class="sd">    &gt;&gt;&gt; def prop_min(xs: list[int]) -&gt; bool:</span>
+</span><span id="precondition-272"><a href="#precondition-272"><span class="linenos">272</span></a><span class="sd">    ...     precondition(len(xs) &gt; 0)</span>
+</span><span id="precondition-273"><a href="#precondition-273"><span class="linenos">273</span></a><span class="sd">    ...     return sorted(xs)[0] == min(xs)</span>
+</span><span id="precondition-274"><a href="#precondition-274"><span class="linenos">274</span></a><span class="sd">    &gt;&gt;&gt; check(prop_min)</span>
+</span><span id="precondition-275"><a href="#precondition-275"><span class="linenos">275</span></a><span class="sd">    +++ OK, passed 359 tests: prop_min</span>
+</span><span id="precondition-276"><a href="#precondition-276"><span class="linenos">276</span></a><span class="sd">    True</span>
+</span><span id="precondition-277"><a href="#precondition-277"><span class="linenos">277</span></a>
+</span><span id="precondition-278"><a href="#precondition-278"><span class="linenos">278</span></a><span class="sd">    Above, `precondition(xs)` would be equivalent.</span>
+</span><span id="precondition-279"><a href="#precondition-279"><span class="linenos">279</span></a><span class="sd">    We use the verbose option for clarity.</span>
+</span><span id="precondition-280"><a href="#precondition-280"><span class="linenos">280</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="precondition-281"><a href="#precondition-281"><span class="linenos">281</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">condition</span><span class="p">:</span>
+</span><span id="precondition-282"><a href="#precondition-282"><span class="linenos">282</span></a>        <span class="k">raise</span> <span class="n">PreconditionUnmatched</span>
 </span></pre></div>
 
 
